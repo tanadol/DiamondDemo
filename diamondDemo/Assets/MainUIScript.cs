@@ -260,12 +260,14 @@ public class MainUIScript : MonoBehaviour
         {
             // Parse the JSON response
             string responseText = request.downloadHandler.text;
+            t_error.text = "";
             HandleResponse(responseText);
         }
         else
         {
             // Handle error response
             Debug.LogError("Error: " + request.error);
+            t_error.text = request.error;
         }
     }
 
@@ -281,10 +283,12 @@ public class MainUIScript : MonoBehaviour
             Debug.Log("Remaining Diamonds: " + response.new_diamond_count);
             currentPlayer.data.diamond_count = response.new_diamond_count;
             t_diamondcount.text = "x " + currentPlayer.data.diamond_count.ToString();
+            t_error.text = "";
         }
         else
         {
             Debug.LogError("Error: " + response.message);
+            t_error.text = response.message;
         }
     }
 
