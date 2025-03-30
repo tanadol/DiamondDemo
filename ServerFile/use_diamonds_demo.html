@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Use Diamonds - Test Page</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .container { max-width: 600px; margin: 50px auto; padding: 20px; border: 1px solid #ccc; border-radius: 5px; }
+        input, button { padding: 10px; margin: 5px; width: 100%; box-sizing: border-box; }
+        .result { margin-top: 20px; padding: 10px; border: 1px solid #ddd; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; color: #155724; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Use Diamonds</h2>
+        <label for="username">Username:</label>
+        <input type="text" id="username" placeholder="Enter your username">
+
+        <label for="diamonds_used">Diamonds to Use:</label>
+        <input type="number" id="diamonds_used" placeholder="Enter number of diamonds to use">
+
+        <button onclick="useDiamonds()">Submit</button>
+
+        <div id="result" class="result" style="display:none;">
+            <!-- Result will be displayed here -->
+        </div>
+    </div>
+
+    <script>
+        // Function to call the use_diamonds API
+        function useDiamonds() {
+            const username = document.getElementById('username').value;
+            const diamondsUsed = document.getElementById('diamonds_used').value;
+
+            if (!username || !diamondsUsed) {
+                alert('Please enter both Username and Diamonds to use.');
+                return;
+            }
+
+            // Fetch the user ID using the username
+            fetch('get_userid_by_username.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username: username })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    const userid = data.userid;
+
+                    // Prepare data to be sent in the API request
+                    const requestData = {
+                        userid: userid,
+                        diamonds_used: parseInt(diamondsUsed)
+                    };
+
+                    // Send the POST request to the use_diamonds API
+                    fetch('use_diamonds.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(requestData)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        const resultDiv = document.getElementById('result');
+                        resultDiv.style.display = 'block';
+
+                        // Check the response status and display appropriate message
+                        if (data.status === 'success') {
+                            resultDiv.classList.add('success');
+                            resultDiv.classList.remove('error');
+                            resultDiv.innerHTML = `
+                                <strong>Success!</strong><br>
+                                Diamonds used: ${diamondsUsed}<br>
+                                Remaining diamonds: ${data.new_diamond_count}
+                            `;
+                        } else {
+                            resultDiv.classList.add('error');
+                            resultDiv.classList.remove('success');
+                            resultDiv.innerHTML = `
+                                <strong>Error:</strong><br>
+                                ${data.message}
+                            `;
+                        }
+                    })
+                    .catch(error => {
+                        const resultDiv = document.getElementById('result');
+                        resultDiv.style.display = 'block';
+                        resultDiv.classList.add('error');
+                        resultDiv.classList.remove('success');
+                        resultDiv.innerHTML = `
+                            <strong>Error:</strong><br>
+                            There was an issue with the request. Please try again.
+                        `;
+                    });
+                } else {
+                    alert('Username not found!');
+                }
+            })
+            .catch(error => {
+                alert('Error fetching user ID');
+            });
+        }
+    </script>
+</body>
+</html>
